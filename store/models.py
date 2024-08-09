@@ -52,7 +52,7 @@ class ProductImage(models.Model):
     image = models.ImageField(upload_to='products/')
     title = models.CharField(max_length=50, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE,related_name='images')
 
     def __str__(self):
         return self.title
