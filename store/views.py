@@ -8,7 +8,7 @@ from store.models import *
 from store.serializers import ProductSerializer, CartSerializer, OrderSerializer, AddressSerializer
 
 
-# Create your views here.
+# Create your views here.origin
 
 
 class ProductViewSet(ModelViewSet):
