@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import *
-from django.core.files.uploadedfile import TemporaryUploadedFile,InMemoryUploadedFile
+from django.core.files.uploadedfile import TemporaryUploadedFile, InMemoryUploadedFile
+
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -8,18 +9,25 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ProductSerializer(serializers.ModelSerializer):
-    track=serializers.StringRelatedField
-    def __init__(self, *args, **kwargs):
-        files = kwargs.pop('files')
+class ProductImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductImage
+        fields = '__all__'
 
-        super().__init__(*args, **kwargs)
-        if files:
-            images_file_dict ={
-                field: serializers.ImageField(required=False,write_only=True)
-                for field in files
-            }
-            self.fields.update(**images_file_dict)
+
+class ProductSerializer(serializers.ModelSerializer):
+    images = ProductImageSerializer(many=True)
+
+    # def __init__(self, *args, **kwargs):
+    #     files = kwargs.pop('files')
+    #
+    #     super().__init__(*args, **kwargs)
+    #     if files:
+    #         images_file_dict = {
+    #             field: serializers.ImageField(required=False, write_only=True)
+    #             for field in files
+    #         }
+    #         self.fields.update(**images_file_dict)
 
     class Meta:
         model = Product
@@ -33,21 +41,22 @@ class ProductSerializer(serializers.ModelSerializer):
         return rep
 
     def create(self, validated_data):
-        validated_data_copy=validated_data.copy()
-        validated_files = []
-        for key, value in validated_data_copy.items():
-            if isinstance(value,(TemporaryUploadedFile,InMemoryUploadedFile)):
-                validated_files.append(value)
-                validated_data.pop(key)
-
+        # validated_data_copy = validated_data.copy()
+        # validated_files = []
+        # for key, value in validated_data_copy.items():
+        #     if isinstance(value, (TemporaryUploadedFile, InMemoryUploadedFile)):
+        #         validated_files.append(value)
+        #         validated_data.pop(key)
+        images = validated_data.pop('images')
         colors = validated_data.pop('color_value')
         sizes = validated_data.pop('size_value')
         owner = self.context['request'].user
         products = Product.objects.create(owner=owner, **validated_data)
-        for image in validated_files:
-            ProductImage.objects.create(image=image, product=products,)
 
-
+        # for image in validated_files:
+        #     ProductImage.objects.create(image=image, product=products, )
+        for image in images:
+            ProductImage.objects.create(product=products, **image)
         for color in colors:
             products.color_value.add(color)
 
